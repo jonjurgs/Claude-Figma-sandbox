@@ -1,0 +1,522 @@
+<title>BodyFirst Membership Paywall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Tokens mirror the Figma file "Membership Test form Mobbin".
+     Deliberately single-theme (dark), matching the design. */
+  :root {
+    color-scheme: dark;
+    --bg: #1C1E2A;
+    --bg-deep: #111219;
+    --chrome: #181922;
+    --chrome-line: #2A2C3A;
+    --surface: #383A46;
+    --sheet: #252733;
+    --row: #42444F;
+    --row-selected: #4D4F59;
+    --radio: #5E606B;
+    --ink: #FFFFFF;
+    --ink-soft: #ECECF0;
+    --ink-2: rgba(255, 255, 255, 0.7);
+    --ink-3: rgba(255, 255, 255, 0.45);
+    --chip-line: #5C5E6B;
+    --accent: #F5A03A;
+    --badge: #6A45F5;
+    --ok: #2FB45A;
+    --font: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-brand: "Outfit", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg-deep);
+    color: var(--ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Prototype chrome ---------- */
+  .shell { height: 100%; display: flex; flex-direction: column; }
+  .devbar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    gap: 8px 16px; padding: 10px 16px;
+    background: var(--chrome); border-bottom: 1px solid var(--chrome-line);
+    font-size: 13px;
+  }
+  .devbar-title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .devbar-title strong { font-weight: 700; white-space: nowrap; }
+  .devbar-title span { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .devbar-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--bg-deep); border: 1px solid var(--chrome-line); border-radius: 10px; }
+  .seg button {
+    border: 0; background: transparent; color: var(--ink-2);
+    padding: 6px 10px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); }
+  .seg button .dim { color: var(--ink-3); font-weight: 500; margin-left: 4px; font-variant-numeric: tabular-nums; }
+  .ghost-btn {
+    border: 1px solid var(--chrome-line); background: transparent; color: var(--ink-2);
+    padding: 7px 12px; border-radius: 9px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .ghost-btn:hover, .seg button:hover { color: var(--ink); }
+
+  .viewport { flex: 1; min-height: 0; display: flex; justify-content: center; align-items: center; }
+  .viewport:not([data-device="auto"]) { padding: 16px; }
+  .stage {
+    position: relative; overflow: hidden; container-type: inline-size;
+    width: 100%; height: 100%; background: var(--bg);
+  }
+  .viewport[data-device="mobile"] .stage { width: 393px; max-width: 100%; height: min(852px, 100%); border-radius: 40px; box-shadow: 0 0 0 8px #07070B, 0 24px 60px rgba(0,0,0,.5); }
+  .viewport[data-device="tablet"] .stage { width: 834px; max-width: 100%; height: min(1194px, 100%); border-radius: 28px; box-shadow: 0 0 0 10px #07070B, 0 24px 60px rgba(0,0,0,.5); }
+  .viewport[data-device="desktop"] .stage { width: 1440px; max-width: 100%; height: min(900px, 100%); border-radius: 12px; box-shadow: 0 0 0 1px var(--chrome-line), 0 24px 60px rgba(0,0,0,.5); }
+
+  /* ---------- App: mobile first ---------- */
+  .app {
+    --gutter: 20px;
+    height: 100%; overflow-y: auto; overscroll-behavior: contain;
+    display: grid; grid-template-rows: auto 1fr;
+    background: var(--bg);
+  }
+  .hero {
+    display: flex; flex-direction: column;
+    min-height: 340px; padding: 8px var(--gutter) 24px;
+    background:
+      radial-gradient(60% 40% at 55% 28%, rgba(244, 178, 122, 0.45), rgba(244, 178, 122, 0) 70%),
+      linear-gradient(to bottom, rgba(0,0,0,.12), rgba(0,0,0,.08) 60%, rgba(28,30,42,.9)),
+      linear-gradient(to bottom, #5F7C80 0%, #8C6A55 40%, #A9543A 68%, #1C1E2A 100%);
+  }
+  .nav { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+  .icon-btn { display: grid; place-items: center; width: 44px; height: 44px; margin-left: -11px; border: 0; background: none; cursor: pointer; border-radius: 12px; }
+  .text-btn { border: 0; background: none; cursor: pointer; font-size: 16px; font-weight: 600; color: var(--ink-3); padding: 10px 0; }
+  .text-btn:hover { color: var(--ink-2); }
+
+  .brand { margin-top: auto; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .wordmark { font-family: var(--font-brand); font-weight: 500; font-size: 30px; letter-spacing: -0.02em; line-height: 1; }
+  .tag { font-size: 11px; font-weight: 800; letter-spacing: 0.02em; color: #3A2208; padding: 3px 7px; border-radius: 7px; background: linear-gradient(90deg, #F8C45A, #EE8E33); }
+  .nowrap { white-space: nowrap; }
+  .copy h1 { margin: 0; font-size: 34px; line-height: 42px; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
+  .copy p { margin: 12px 0 0; font-size: 15px; line-height: 20px; font-weight: 600; opacity: 0.92; text-wrap: pretty; }
+
+  .checkout { display: flex; flex-direction: column; gap: 12px; padding: 0 var(--gutter); }
+  .panel-head { display: none; align-items: center; justify-content: space-between; }
+  .panel-head h2 { margin: 0; font-size: 24px; font-weight: 700; }
+
+  .plans { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 2px; border-radius: 18px; overflow: hidden; background: var(--bg); }
+  .plan { position: relative; display: flex; align-items: center; gap: 14px; padding: 12px 20px 12px 12px; background: var(--row); cursor: pointer; transition: background-color .15s ease; }
+  .plan:hover { background: #474954; }
+  .plan:has(input:checked) { background: var(--row-selected); }
+  .plan:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .plan input { position: absolute; opacity: 0; pointer-events: none; }
+  .radio { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--radio); display: grid; place-items: center; }
+  .radio::after { content: ""; width: 21px; height: 21px; border-radius: 50%; background: radial-gradient(circle, #F9B24D 50%, #E88A2E); transform: scale(0); transition: transform .2s cubic-bezier(.3,1.6,.5,1); }
+  .plan:has(input:checked) .radio { background: #6A6C75; }
+  .plan:has(input:checked) .radio::after { transform: scale(1); }
+  .plan-label { flex: 1; min-width: 0; display: grid; gap: 2px; }
+  .plan-name { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font-size: 19px; font-weight: 600; line-height: 1.25; }
+  .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.02em; background: var(--badge); padding: 2px 6px; border-radius: 4px; }
+  .plan-detail { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+  .price { text-align: right; display: grid; font-variant-numeric: tabular-nums; }
+  .price b { font-size: 16px; font-weight: 700; white-space: nowrap; }
+  .price span { font-size: 12px; font-weight: 500; color: var(--ink-2); }
+
+  .included { background: var(--surface); border-radius: 22px; padding: 20px 22px 18px; }
+  .included h2 { margin: 0 0 16px; font-size: 18px; font-weight: 700; color: var(--ink-2); }
+  .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 8px; }
+  .chip { border: 1.5px solid var(--chip-line); border-radius: 20px; padding: 7px 14px; font-size: 14px; color: var(--ink-soft); white-space: nowrap; }
+  .included[data-collapsed="true"] .chips { max-height: 86px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 50%, transparent); mask-image: linear-gradient(#000 50%, transparent); }
+  .more { margin-top: 10px; border: 0; background: none; cursor: pointer; font-size: 13px; font-weight: 700; color: var(--accent); padding: 4px 0; }
+
+  .actions {
+    position: sticky; bottom: 0; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    margin: 0 calc(var(--gutter) * -1); padding: 36px var(--gutter) 14px;
+    background: linear-gradient(to bottom, rgba(28,30,42,0), rgba(28,30,42,.92) 28%, var(--bg) 50%);
+  }
+  .reassure { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--ink-soft); margin: 0; }
+  .cta {
+    width: 100%; height: 58px; border: 0; border-radius: 29px; cursor: pointer;
+    background: #fff; color: #111217; font-size: 19px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform .12s ease, background-color .15s ease;
+  }
+  .cta:hover { background: #F3F3F6; }
+  .cta:active { transform: scale(.985); }
+  .cta:disabled { cursor: progress; background: #DADAE0; }
+  .legal { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  .legal button { border: 0; background: none; cursor: pointer; font-size: 12px; font-weight: 500; color: var(--ink-3); padding: 2px 0; }
+  .legal button:hover { color: var(--ink-2); }
+  .legal .restore-link { display: none; }
+
+  /* ---------- Tablet ---------- */
+  @container (min-width: 700px) {
+    .app { --gutter: 32px; }
+    .hero { min-height: 560px; align-items: center; text-align: center; padding-bottom: 40px; }
+    .nav { align-self: stretch; }
+    .brand { justify-content: center; margin-bottom: 16px; }
+    .wordmark { font-size: 36px; }
+    .tag { font-size: 13px; }
+    .copy { display: grid; justify-items: center; }
+    .copy h1 { font-size: 52px; line-height: 60px; max-width: 540px; }
+    .copy p { font-size: 19px; line-height: 26px; max-width: 500px; margin-top: 16px; }
+    .checkout { width: 100%; max-width: 600px; margin: 0 auto; padding: 0 0 8px; gap: 16px; box-sizing: border-box; }
+    .included[data-collapsed] .chips { max-height: none; -webkit-mask-image: none; mask-image: none; }
+    .more { display: none; }
+    .actions { position: static; margin: 0; padding: 16px 0 8px; background: none; }
+  }
+  @container (min-width: 700px) and (max-width: 760px) {
+    .checkout { padding-inline: 16px; }
+  }
+
+  /* ---------- Desktop ---------- */
+  @container (min-width: 1100px) {
+    .app { grid-template-columns: minmax(0, 1fr) 560px; grid-template-rows: minmax(100%, auto); overflow: hidden; }
+    .hero { min-height: 0; padding: 48px 64px 64px; align-items: flex-start; text-align: left; }
+    .nav { display: none; }
+    .brand { margin-top: 0; justify-content: flex-start; }
+    .wordmark { font-size: 34px; }
+    .copy { margin-top: auto; justify-items: start; }
+    .copy h1 { font-size: 64px; line-height: 72px; max-width: 620px; }
+    .copy p { font-size: 20px; line-height: 27px; max-width: 460px; margin-top: 20px; }
+    .checkout { max-width: none; margin: 0; padding: 40px 56px; gap: 20px; overflow-y: auto; justify-content: safe center; }
+    .panel-head { display: flex; }
+    .panel-head .icon-btn { margin: 0 -11px 0 0; }
+    .legal .restore-link { display: inline; }
+  }
+
+  /* ---------- Overlays ---------- */
+  .overlay {
+    position: absolute; inset: 0; z-index: 20;
+    display: flex; align-items: flex-end; justify-content: center;
+    background: rgba(9, 10, 15, 0.62);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    animation: fade .2s ease;
+  }
+  .sheet {
+    width: 100%; max-width: 480px; box-sizing: border-box;
+    background: var(--sheet); border-radius: 26px 26px 0 0;
+    padding: 12px 20px 22px; display: grid; gap: 16px;
+    box-shadow: 0 -10px 40px rgba(0,0,0,.35);
+    animation: rise .28s cubic-bezier(.2,.9,.3,1);
+  }
+  .grabber { justify-self: center; width: 40px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.2); }
+  .sheet h3 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .sheet p { margin: 0; font-size: 14px; line-height: 20px; color: var(--ink-2); }
+  .summary { margin: 0; display: grid; gap: 0; background: var(--bg); border-radius: 16px; padding: 4px 16px; }
+  .summary div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; font-size: 14px; }
+  .summary div + div { border-top: 1px solid rgba(255,255,255,.08); }
+  .summary dt { color: var(--ink-2); }
+  .summary dd { margin: 0; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+  .note { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; line-height: 18px; color: var(--ink-3); }
+  .sheet-actions { display: grid; gap: 8px; }
+  .secondary { height: 50px; border: 0; border-radius: 25px; background: transparent; color: var(--ink-2); font-size: 16px; font-weight: 600; cursor: pointer; }
+  .secondary:hover { color: var(--ink); background: rgba(255,255,255,.05); }
+  .success { text-align: center; justify-items: center; padding-top: 28px; }
+  .success-mark { width: 72px; height: 72px; border-radius: 50%; background: var(--ok); display: grid; place-items: center; animation: pop .4s cubic-bezier(.3,1.6,.5,1); }
+  .spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(17,18,23,.25); border-top-color: #111217; animation: spin .7s linear infinite; }
+
+  @container (min-width: 700px) {
+    .overlay { align-items: center; padding: 24px; }
+    .sheet { border-radius: 26px; padding: 28px; }
+    .grabber { display: none; }
+  }
+
+  .toast {
+    position: absolute; top: 16px; left: 50%; z-index: 30;
+    transform: translate(-50%, 0); max-width: calc(100% - 32px); box-sizing: border-box;
+    background: #F4F4F7; color: #111217; font-size: 14px; font-weight: 600;
+    padding: 11px 16px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    display: flex; align-items: center; gap: 8px;
+    animation: drop .25s cubic-bezier(.2,.9,.3,1);
+  }
+
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes rise { from { transform: translateY(40px); opacity: 0; } }
+  @keyframes drop { from { transform: translate(-50%, -12px); opacity: 0; } }
+  @keyframes pop { from { transform: scale(.5); opacity: 0; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+  }
+  @media (max-width: 560px) {
+    .devbar-title span, .seg { display: none; }
+  }
+</style>
+
+<div class="shell">
+  <header class="devbar">
+    <div class="devbar-title">
+      <strong>Membership paywall</strong>
+      <span>Prototype from Figma · Membership Test form Mobbin</span>
+    </div>
+    <div class="devbar-controls">
+      <div class="seg" role="group" aria-label="Preview size">
+        <button type="button" data-device="auto" aria-pressed="true">Fit window</button>
+        <button type="button" data-device="mobile" aria-pressed="false">Mobile<span class="dim">393</span></button>
+        <button type="button" data-device="tablet" aria-pressed="false">Tablet<span class="dim">834</span></button>
+        <button type="button" data-device="desktop" aria-pressed="false">Desktop<span class="dim">1440</span></button>
+      </div>
+      <button type="button" class="ghost-btn" id="restart">Restart</button>
+    </div>
+  </header>
+
+  <main class="viewport" id="viewport" data-device="auto">
+    <div class="stage" id="stage">
+      <div class="app" id="app">
+        <section class="hero" aria-labelledby="headline">
+          <div class="nav">
+            <button type="button" class="icon-btn" data-action="close" aria-label="Close">
+              <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 3L19 19M19 3L3 19" stroke="#F5A03A" stroke-width="4" stroke-linecap="round"/></svg>
+            </button>
+            <button type="button" class="text-btn" data-action="restore">Restore</button>
+          </div>
+          <div class="brand">
+            <span class="wordmark">BodyFirst</span>
+            <span class="tag">PLUS</span>
+          </div>
+          <div class="copy">
+            <h1 id="headline">Your Daily Guide to <span class="nowrap">Self-Discovery</span></h1>
+            <p>Find clarity within, align with universal rhythms, and navigate your destiny</p>
+          </div>
+        </section>
+
+        <section class="checkout" aria-label="Choose a plan">
+          <div class="panel-head">
+            <h2>Choose your plan</h2>
+            <button type="button" class="icon-btn" data-action="close" aria-label="Close">
+              <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 3L19 19M19 3L3 19" stroke="#F5A03A" stroke-width="4" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+
+          <fieldset class="plans">
+            <legend class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Plan</legend>
+            <label class="plan">
+              <input type="radio" name="plan" id="plan-weekly" value="weekly" checked>
+              <span class="radio" aria-hidden="true"></span>
+              <span class="plan-label">
+                <span class="plan-name">Weekly</span>
+                <span class="plan-detail">SGD 6.98 per week</span>
+              </span>
+              <span class="price"><b>SGD 7.98</b><span>per week</span></span>
+            </label>
+            <label class="plan">
+              <input type="radio" name="plan" id="plan-annual" value="annual">
+              <span class="radio" aria-hidden="true"></span>
+              <span class="plan-label">
+                <span class="plan-name">Annually + <span class="badge">BIRTH CHART</span></span>
+                <span class="plan-detail">SGD 28.98 per year</span>
+              </span>
+              <span class="price"><b>SGD 0.60</b><span>per week</span></span>
+            </label>
+            <label class="plan">
+              <input type="radio" name="plan" id="plan-lifetime" value="lifetime">
+              <span class="radio" aria-hidden="true"></span>
+              <span class="plan-label">
+                <span class="plan-name">Lifetime + <span class="badge">BIRTH CHART</span></span>
+                <span class="plan-detail">Pay once, enjoy forever</span>
+              </span>
+              <span class="price"><b>SGD 59.98</b><span>one-time</span></span>
+            </label>
+          </fieldset>
+
+          <section class="included" id="included" data-collapsed="true" aria-labelledby="included-title">
+            <h2 id="included-title">What’s Included</h2>
+            <ul class="chips">
+              <li class="chip">Chart</li>
+              <li class="chip">24/7 Astrologer Chat</li>
+              <li class="chip">Personal Program</li>
+              <li class="chip">Dream Readings</li>
+              <li class="chip">Daily Horoscope</li>
+              <li class="chip">Moon Calendar</li>
+              <li class="chip">Affirmations</li>
+              <li class="chip">Meditations</li>
+              <li class="chip">Rituals</li>
+            </ul>
+            <button type="button" class="more" id="more" aria-expanded="false" aria-controls="included">Show all 9 features</button>
+          </section>
+
+          <div class="actions">
+            <p class="reassure">
+              <svg width="20" height="22" viewBox="0 0 20 22" aria-hidden="true"><path d="M10 1L18.5 4v6.5C18.5 15.5 14.8 19.4 10 21 5.2 19.4 1.5 15.5 1.5 10.5V4z" fill="#2FB45A"/><path d="M6 11l2.8 2.8L14.5 8" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              No Commitment. Cancel Anytime.
+            </p>
+            <button type="button" class="cta" id="continue">Continue</button>
+            <nav class="legal" aria-label="Legal">
+              <button type="button" class="restore-link" data-action="restore">Restore Purchases</button>
+              <button type="button" data-action="terms">Terms of Use</button>
+              <button type="button" data-action="privacy">Privacy Policy</button>
+            </nav>
+          </div>
+        </section>
+      </div>
+
+      <div id="layer"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  var PLANS = {
+    weekly:   { name: 'Weekly',    charge: 'SGD 7.98',  billing: 'Every week, until you cancel', perks: 'Core features' },
+    annual:   { name: 'Annually',  charge: 'SGD 28.98', billing: 'Every year (SGD 0.60 per week)', perks: 'Includes Birth Chart' },
+    lifetime: { name: 'Lifetime',  charge: 'SGD 59.98', billing: 'One-time payment', perks: 'Includes Birth Chart' }
+  };
+
+  var viewport = document.getElementById('viewport');
+  var layer = document.getElementById('layer');
+  var app = document.getElementById('app');
+  var included = document.getElementById('included');
+  var more = document.getElementById('more');
+  var lastFocus = null;
+  var toastTimer = null;
+
+  function selectedPlan() {
+    var el = document.querySelector('input[name="plan"]:checked');
+    return el ? el.value : 'weekly';
+  }
+
+  // ----- Preview size -----
+  function setDevice(d) {
+    viewport.dataset.device = d;
+    document.querySelectorAll('.seg button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.device === d));
+    });
+    try { localStorage.setItem('paywall-device', d); } catch (e) {}
+  }
+  document.querySelectorAll('.seg button').forEach(function (b) {
+    b.addEventListener('click', function () { setDevice(b.dataset.device); });
+  });
+  try { var saved = localStorage.getItem('paywall-device'); if (saved) setDevice(saved); } catch (e) {}
+
+  // ----- Feature list (mobile collapse) -----
+  more.addEventListener('click', function () {
+    var collapsed = included.dataset.collapsed === 'true';
+    included.dataset.collapsed = String(!collapsed);
+    more.setAttribute('aria-expanded', String(collapsed));
+    more.textContent = collapsed ? 'Show fewer' : 'Show all 9 features';
+  });
+
+  // ----- Toast -----
+  function toast(msg) {
+    clearTimeout(toastTimer);
+    var old = document.querySelector('.toast');
+    if (old) old.remove();
+    var t = document.createElement('div');
+    t.className = 'toast';
+    t.setAttribute('role', 'status');
+    t.textContent = msg;
+    document.getElementById('stage').appendChild(t);
+    toastTimer = setTimeout(function () { t.remove(); }, 2600);
+  }
+
+  // ----- Overlays -----
+  function openLayer(html) {
+    lastFocus = document.activeElement;
+    layer.innerHTML = '<div class="overlay" id="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">' + html + '</div></div>';
+    var overlay = document.getElementById('overlay');
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeLayer(); });
+    app.setAttribute('inert', '');
+    var first = layer.querySelector('[data-autofocus]') || layer.querySelector('button');
+    if (first) first.focus();
+  }
+  function closeLayer() {
+    layer.innerHTML = '';
+    app.removeAttribute('inert');
+    if (lastFocus && document.body.contains(lastFocus)) lastFocus.focus();
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && layer.firstChild) closeLayer();
+  });
+
+  function confirmSheet() {
+    var p = PLANS[selectedPlan()];
+    openLayer(
+      '<div class="grabber" aria-hidden="true"></div>' +
+      '<h3 id="sheet-title">Confirm your plan</h3>' +
+      '<dl class="summary">' +
+        '<div><dt>Plan</dt><dd>BodyFirst Plus · ' + p.name + '</dd></div>' +
+        '<div><dt>Billing</dt><dd>' + p.billing + '</dd></div>' +
+        '<div><dt>Due today</dt><dd>' + p.charge + '</dd></div>' +
+      '</dl>' +
+      '<p class="note"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none;margin-top:1px"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 4.6v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>This is a prototype. No payment is taken.</p>' +
+      '<div class="sheet-actions">' +
+        '<button type="button" class="cta" id="pay" data-autofocus>Subscribe · ' + p.charge + '</button>' +
+        '<button type="button" class="secondary" id="cancel">Cancel</button>' +
+      '</div>'
+    );
+    document.getElementById('cancel').addEventListener('click', closeLayer);
+    document.getElementById('pay').addEventListener('click', function () {
+      var btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>Processing…';
+      setTimeout(function () { successSheet(p); }, 1300);
+    });
+  }
+
+  function successSheet(p) {
+    openLayer(
+      '<div class="success" style="display:grid;gap:14px">' +
+        '<div class="success-mark" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 34 34"><path d="M9 17.5l5.5 5.5L25.5 11" stroke="#fff" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+        '<h3 id="sheet-title">Welcome to BodyFirst Plus</h3>' +
+        '<p>Your ' + p.name.toLowerCase() + ' plan is active. ' + p.perks + ', plus everything in What’s Included.</p>' +
+      '</div>' +
+      '<div class="sheet-actions"><button type="button" class="cta" id="done" data-autofocus>Start exploring</button></div>'
+    );
+    document.getElementById('done').addEventListener('click', function () {
+      closeLayer();
+      toast('Plus is active on the ' + p.name + ' plan');
+    });
+  }
+
+  function leaveSheet() {
+    openLayer(
+      '<div class="grabber" aria-hidden="true"></div>' +
+      '<h3 id="sheet-title">Continue without Plus?</h3>' +
+      '<p>You can keep using the free version and upgrade any time from Settings.</p>' +
+      '<div class="sheet-actions">' +
+        '<button type="button" class="cta" id="back" data-autofocus>Back to plans</button>' +
+        '<button type="button" class="secondary" id="leave">Continue with free</button>' +
+      '</div>'
+    );
+    document.getElementById('back').addEventListener('click', closeLayer);
+    document.getElementById('leave').addEventListener('click', function () {
+      closeLayer();
+      toast('Paywall dismissed. Use Restart to see it again.');
+    });
+  }
+
+  // ----- Wiring -----
+  document.getElementById('continue').addEventListener('click', confirmSheet);
+  document.querySelectorAll('[data-action]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var a = el.dataset.action;
+      if (a === 'close') leaveSheet();
+      else if (a === 'restore') {
+        toast('Checking your purchases…');
+        setTimeout(function () { toast('No previous purchases found'); }, 1200);
+      }
+      else if (a === 'terms') toast('Terms of Use would open here');
+      else if (a === 'privacy') toast('Privacy Policy would open here');
+    });
+  });
+  document.querySelectorAll('input[name="plan"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      var p = PLANS[r.value];
+      document.getElementById('continue').setAttribute('aria-label', 'Continue with the ' + p.name + ' plan, ' + p.charge);
+    });
+  });
+  document.getElementById('restart').addEventListener('click', function () {
+    closeLayer();
+    document.getElementById('plan-weekly').checked = true;
+    included.dataset.collapsed = 'true';
+    more.setAttribute('aria-expanded', 'false');
+    more.textContent = 'Show all 9 features';
+    app.scrollTop = 0;
+    var t = document.querySelector('.toast'); if (t) t.remove();
+  });
+})();
+</script>
